@@ -37,12 +37,12 @@ def load_file(path: Path, fn: str):
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
 
-        # try:
-        func = getattr(module, fn)
-        return func()
-        # except AttributeError:
-        #     logging.warning(f"Unable to locate {fn} in {path}")
-        #     return None
+        try:
+            func = getattr(module, fn)
+            return func()
+        except AttributeError as err:
+            logging.warning(f"Unable to locate {fn} in {path}: {err}")
+            return None
 
     logging.warning(f"Build file {path} does not appear to be a Python module")
     return None
