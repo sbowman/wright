@@ -1,14 +1,16 @@
+import inspect
 from functools import wraps
 
 from .proojekt import Proojekt
 
 
 def task(func):
-    """Mark a function as a build task."""
+    """Mark a function as a build task and inject the context."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if kwargs.get('ctx') is None:
+        sig = inspect.signature(func)
+        if "ctx" in sig.parameters and "ctx" not in kwargs:
             ctx = Proojekt()
             kwargs["ctx"] = ctx
 
