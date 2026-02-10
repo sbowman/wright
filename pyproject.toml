@@ -1,0 +1,20 @@
+[project]
+name = "wright"
+version = "0.1.0"
+description = "A build tool to support polyglot monolithic code repositories"
+readme = "README.md"
+authors = [
+    { name = "Sean Bowman", email = "pico303@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "click>=8.3.1",
+    "sh>=2.2.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.0,<0.11.0"]
+build-backend = "uv_build"
+
+[project.scripts]
+wright = "wright.main:run"
