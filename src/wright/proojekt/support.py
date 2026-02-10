@@ -1,8 +1,15 @@
 import importlib.util
 import logging
 import os
+import re
 import sys
+from enum import Enum
 from pathlib import Path
+
+
+class InvalidVersionError(Exception):
+    """The version defined in the BUILD.py does not match semantic versioning."""
+    pass
 
 
 def load_file(path: Path, fn: str):
@@ -107,3 +114,60 @@ def is_env(var: str, value: str = "true") -> bool:
     given value.  If the value is not supplied, assumes a true or false value."""
     env = os.getenv(var)
     return env and env.casefold() == value.casefold()
+
+
+class Version(Enum):
+    """Used to indicate which part of the semantic version to bump."""
+    MAJOR = 0
+    MINOR = 1
+    PATCH = 2
+
+
+def bump_version(build_file: str, semantic: Version = Version.PATCH) -> tuple[int, int, int] | None:
+    """Open the BUILD.py file, look for a constant, VERSION, and try to bump the
+    version number of the application.  Only works for semantic versioning."""
+    with open(build_file, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    ret_value = None
+    with open(build_file, "w", encoding="utf-8") as f:
+        for line in lines:
+            if not ret_value:
+                version = _get_version(line)
+                if version:
+                    original, major, minor, patch = version
+                    match semantic:
+                        case Version.MAJOR:
+                            major += 1
+                        case Version.MINOR:
+                            minor += 1
+                        case Version.PATCH:
+                            patch += 1
+
+                    ret_value = (major, minor, patch)
+
+                    f.write(line.replace(original, f'"{major}.{minor}.{patch}"'))
+
+                    continue
+
+            f.write(line)
+
+    return ret_value
+
+
+def _get_version(line: str) -> tuple[str, int, int, int] | None:
+    """Looks at a string of text for a matching VERSION.  Used by bump_version."""
+    match = re.compile(r'(?:export)?\s*VERSION\s*=\s*(["\'](\d)\.(\d)\.(\d)["\'])').match(line)
+    if match:
+        try:
+            version = match.group(1)
+
+            major = int(match.group(2))
+            minor = int(match.group(3))
+            patch = int(match.group(4))
+
+            return version, major, minor, patch
+        except IndexError:
+            return None
+
+    return None

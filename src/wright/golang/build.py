@@ -30,7 +30,7 @@ class App:
         self.vars: dict[str, str] = {}
         self.ldflags: list[str] = []
 
-    def watch(self, glob: str):
+    def sources(self, glob: str):
         """Add a file or pattern of files to watch for changes before compiling."""
         self.proojekt.watch(glob)
 
@@ -89,6 +89,15 @@ class App:
             logging.error(f"Error running test: {err}")
 
         return self
+
+    def run(self, *args):
+        """Run the Go binary, i.e. the target."""
+        cmd = sh.Command(self.proojekt.target)
+        try:
+            output = cmd(*args)
+            print(output)
+        except Exception as err:
+            logging.error(f"Error running binary: {err}")
 
     def rm(self) -> App:
         """Removes the target binary, i.e. performs a clean.  If the target does

@@ -1,7 +1,6 @@
-import sys
 from functools import wraps
 
-from wright.proojekt import Proojekt
+from .proojekt import Proojekt
 
 
 def task(func):
@@ -34,13 +33,26 @@ def sources(glob: str):
     return decorator
 
 
-def depends(task):
+def depends(task_func):
     """Indicate the task depends on the given task, so run this task first."""
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            task(*args, **kwargs)
+            task_func(*args, **kwargs)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+def target(name: str):
+    """Set the target output for the build process."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            ctx: Proojekt = kwargs.get('ctx')
+            ctx.target = name
 
             return func(*args, **kwargs)
 
