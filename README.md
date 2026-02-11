@@ -1,6 +1,19 @@
 # Wright Build Tool
 
-This is a simple tool used to build applications in our monorepo.
+This is a simple tool used to build applications in our monorepo.  It's really 
+two things:  a library of functions that wrap shell commands that can be 
+executed to build, test, run, and deploy applications, and a binary that helps 
+facilitate these processes.
+
+## Installing
+
+## BUILD.py
+
+## The `wright` Tool
+
+## Using the `wright` Packages
+
+## Developing the `wright` Functionality
 
 ## Usage
 

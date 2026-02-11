@@ -5,6 +5,8 @@ import re
 import sys
 from enum import Enum
 from pathlib import Path
+from types import ModuleType
+from typing import Any
 
 
 class InvalidVersionError(Exception):
@@ -12,19 +14,23 @@ class InvalidVersionError(Exception):
     pass
 
 
-def load_file(path: Path, fn: str):
+def load_file(path: Path, fn: str = None, module_name: str = "buildfile", skip_sys_modules: bool = False) -> tuple[
+                                                                                                                 ModuleType, Any | None] | None:
     """
     Treats BUILD.py like a custom script for the wright tool.  Load the BUILD.py
     file and run the indicated function (build, test, run, package, etc.).  If
-    successful, returns the result of the function.  If the BUILD.py file or
+    successful, returns the result of the function.  If the build file or
     function does not exist, logs a warning and returns None.
 
+    If a function is not indicated, simply loads the build file and returns the
+    module.
+
     :param path: the path to the BUILD.py or other build file
-    :param fn: the name of the function to run in the BUILD.py file
+    :param fn: the name of the function to optionally run in the BUILD.py file
+    :param module_name: how to refer to the loaded module (in sys.modules)
+    :param skip_sys_modules: if true, don't include the build module in the sys.modules
     :return: the results of calling the function in the BUILD.py file
     """
-
-    module_name = "buildfile"
 
     try:
         spec = importlib.util.spec_from_file_location(module_name, path)
@@ -34,14 +40,24 @@ def load_file(path: Path, fn: str):
 
     if spec and spec.loader:
         module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
+
+        if not skip_sys_modules:
+            sys.modules[module_name] = module
+
         spec.loader.exec_module(module)
+
+        # Simply load the module if the function is not defined
+        if not fn:
+            return module, None
 
         try:
             func = getattr(module, fn)
-            return func()
+            return module, func()
         except AttributeError as err:
-            logging.warning(f"Unable to locate {fn} in {path}: {err}")
+            logging.warning(f"Unable to run {fn} in {path}: {err}")
+            return None
+        except Exception as err:
+            logging.warning(f"Failed to run {fn} in {path}: {err}")
             return None
 
     logging.warning(f"Build file {path} does not appear to be a Python module")

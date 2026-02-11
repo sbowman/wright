@@ -1,5 +1,7 @@
-import click
+import logging
 from pathlib import Path
+
+import click
 
 from wright import proojekt
 
@@ -9,6 +11,7 @@ from wright import proojekt
 @click.argument("command", default="build")
 def run(script: Path, command: str):
     """Run a command in a build script"""
+    logging.basicConfig(level=logging.WARNING)
     proojekt.load_file(script, command)
 
 

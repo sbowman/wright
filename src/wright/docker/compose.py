@@ -16,7 +16,10 @@ def up(composefile: str | None = None, detach: bool = True):
     if detach:
         args.append("-d")
 
-    _cmd_docker(args)
+    try:
+        _cmd_docker(args)
+    except Exception as e:
+        print(e)
 
 
 def down(composefile: str | None = None):
