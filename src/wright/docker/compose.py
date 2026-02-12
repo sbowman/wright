@@ -1,8 +1,5 @@
 import sh
 
-_cmd_docker = sh.Command("docker")
-
-
 def up(composefile: str | None = None, detach: bool = True):
     """Run docker compose up."""
     args = ["compose"]
@@ -17,7 +14,7 @@ def up(composefile: str | None = None, detach: bool = True):
         args.append("-d")
 
     try:
-        _cmd_docker(args)
+        sh.docker(*args)
     except Exception as e:
         print(e)
 
@@ -32,7 +29,7 @@ def down(composefile: str | None = None):
 
     args.append("down")
 
-    _cmd_docker(args)
+    sh.docker(*args)
 
 
 def logs(composefile: str | None = None, follow: bool = False):
@@ -49,4 +46,4 @@ def logs(composefile: str | None = None, follow: bool = False):
         args.append("-f")
 
     print("Running logs {}".format(args))
-    _cmd_docker(args, _out=True)
+    sh.docker(*args, _out=True)
