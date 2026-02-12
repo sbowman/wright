@@ -63,7 +63,7 @@ class Builder:
 
         if not self.cache:
             args.append("--no-cache")
-            
+
         args.append(".")
 
         process = _cmd_docker(*args, _iter="out", _err_to_out=True)
