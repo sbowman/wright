@@ -1,12 +1,10 @@
+import sys
 import logging
 from pathlib import Path
 
 import sh
 
 from wright.proojekt import Proojekt
-
-_cmd_go = sh.Command("go")
-
 
 class GolangModuleNotFoundError(Exception):
     """Raised when the Go module is not found."""
@@ -75,7 +73,7 @@ class App:
                 args.append(self.proojekt.target)
 
             try:
-                _cmd_go(*args, _out=True)
+                sh.go(*args, _out=True)
             except Exception as err:
                 logging.error(f"Error compiling: {err}")
                 sys.exit(1)
@@ -85,7 +83,7 @@ class App:
     def test(self) -> App:
         """Run go test ./... to test all the packages in the Go project."""
         try:
-            _cmd_go("test", "./...")
+            sh.go("test", "./...")
         except Exception as err:
             logging.error(f"Error running test: {err}")
             sys.exit(1)

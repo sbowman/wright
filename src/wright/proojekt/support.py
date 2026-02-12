@@ -31,6 +31,7 @@ def load_file(path: Path, fn: str = None, module_name: str = "buildfile", skip_s
     :param skip_sys_modules: if true, don't include the build module in the sys.modules
     :return: the results of calling the function in the BUILD.py file
     """
+    sys.dont_write_bytecode = True
 
     try:
         spec = importlib.util.spec_from_file_location(module_name, path)
@@ -56,7 +57,6 @@ def load_file(path: Path, fn: str = None, module_name: str = "buildfile", skip_s
         except AttributeError as err:
             logging.warning(f"Unable to run {fn} in {path}: {err}")
             sys.exit(1)
-
         except Exception as err:
             logging.warning(f"Failed to run {fn} in {path}: {err}")
             sys.exit(1)
