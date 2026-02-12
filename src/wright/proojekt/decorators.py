@@ -42,7 +42,7 @@ def sources(glob: str):
     return decorator
 
 
-def depends(task_func: FunctionType):
+def depends(task_func):
     """Indicate the task depends on the given task, so run this task first."""
 
     def decorator(func):

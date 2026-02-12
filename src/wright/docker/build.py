@@ -2,8 +2,6 @@ from typing import Any
 
 import sh
 
-_cmd_docker = sh.Command("docker")
-
 
 class Builder:
     """Manages the Docker build process, leveraging buildx."""
@@ -66,11 +64,11 @@ class Builder:
 
         args.append(".")
 
-        process = _cmd_docker(*args, _iter="out", _err_to_out=True)
+        process = sh.docker(*args, _iter="out", _err_to_out=True)
         for line in process:
             print(f"[DOCKER]: {line.strip()}")
 
-        _cmd_docker(*args, _out=True)
+        sh.docker(*args, _out=True)
 
 
 def build(container_name: str, version: str = "latest") -> Builder:
