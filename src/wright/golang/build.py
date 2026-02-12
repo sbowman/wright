@@ -75,9 +75,10 @@ class App:
                 args.append(self.proojekt.target)
 
             try:
-                _cmd_go(*args)
+                _cmd_go(*args, _out=True)
             except Exception as err:
                 logging.error(f"Error compiling: {err}")
+                sys.exit(1)
 
         return self
 
@@ -87,6 +88,7 @@ class App:
             _cmd_go("test", "./...")
         except Exception as err:
             logging.error(f"Error running test: {err}")
+            sys.exit(1)
 
         return self
 
@@ -94,10 +96,12 @@ class App:
         """Run the Go binary, i.e. the target."""
         cmd = sh.Command(self.proojekt.target)
         try:
-            output = cmd(*args)
+            output = cmd(*args, _out=True)
             print(output)
+            sys.exit(output.exit_code)
         except Exception as err:
             logging.error(f"Error running binary: {err}")
+            sys.exit(1)
 
     def rm(self) -> App:
         """Removes the target binary, i.e. performs a clean.  If the target does

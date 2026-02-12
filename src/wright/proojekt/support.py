@@ -55,10 +55,11 @@ def load_file(path: Path, fn: str = None, module_name: str = "buildfile", skip_s
             return module, func()
         except AttributeError as err:
             logging.warning(f"Unable to run {fn} in {path}: {err}")
-            return None
+            sys.exit(1)
+
         except Exception as err:
             logging.warning(f"Failed to run {fn} in {path}: {err}")
-            return None
+            sys.exit(1)
 
     logging.warning(f"Build file {path} does not appear to be a Python module")
     return None

@@ -10,9 +10,11 @@ class Builder:
 
     def __init__(self, container_name: str, version: str = "latest"):
         self.dockerfile: str = "Dockerfile"
+        self.cache: bool = True
         self.container_name: str = container_name
         self.version: str = version
         self._build_args: dict[str, Any] = {}
+        self._includes: dict[str, str] = {}
 
         pass
 
@@ -33,7 +35,13 @@ class Builder:
         return True
 
     def build_arg(self, key: str, value: Any):
+        """Pass a build arg into the Dockerfile."""
         self._build_args[key] = value
+
+    def include(self, name:str, path:str):
+        """Add a build context to the Docker image, to include files outside the
+        project directory."""
+        self._includes[name] = path
 
     def build(self):
         """Builds the Docker image using the docker binary and buildx."""
@@ -49,8 +57,20 @@ class Builder:
             args.append("--build-arg")
             args.append(f"{arg}={value}")
 
+        for name, path in self._includes.items():
+            args.append("--build-context")
+            args.append(f'{name}={path}')
+
+        if not self.cache:
+            args.append("--no-cache")
+            
         args.append(".")
-        _cmd_docker(*args)
+
+        process = _cmd_docker(*args, _iter="out", _err_to_out=True)
+        for line in process:
+            print(f"[DOCKER]: {line.strip()}")
+
+        _cmd_docker(*args, _out=True)
 
 
 def build(container_name: str, version: str = "latest") -> Builder:
