@@ -2,11 +2,14 @@ from typing import Any
 
 import sh
 
+from wright.proojekt import Proojekt
+
 
 class Builder:
     """Manages the Docker build process, leveraging buildx."""
 
-    def __init__(self, container_name: str, version: str = "latest"):
+    def __init__(self, project: Proojekt, container_name: str, version: str = "latest"):
+        self.project = project
         self.dockerfile: str = "Dockerfile"
         self.cache: bool = True
         self.container_name: str = container_name
@@ -36,7 +39,7 @@ class Builder:
         """Pass a build arg into the Dockerfile."""
         self._build_args[key] = value
 
-    def include(self, name:str, path:str):
+    def include(self, name: str, path: str):
         """Add a build context to the Docker image, to include files outside the
         project directory."""
         self._includes[name] = path
@@ -64,14 +67,12 @@ class Builder:
 
         args.append(".")
 
-        process = sh.docker(*args, _iter="out", _err_to_out=True)
+        process = sh.docker(*args, _iter="out", _err_to_out=True, _cwd=self.project.working_dir)
         for line in process:
             print(f"[DOCKER]: {line.strip()}")
 
-        sh.docker(*args, _out=True)
-
-
-def build(container_name: str, version: str = "latest") -> Builder:
+    
+def build(project: Proojekt, container_name: str, version: str = "latest") -> Builder:
     """
     Build a Docker image from the given dockerfile.  Expects a container name
     like `ghcr.io/emu-wsp-internal-repos/postgres`.  The version will be
@@ -85,4 +86,4 @@ def build(container_name: str, version: str = "latest") -> Builder:
             image.build_arg("SAMPLE", "this is a test")
 
     """
-    return Builder(container_name, version)
+    return Builder(project, container_name, version)

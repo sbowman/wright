@@ -1,4 +1,5 @@
 from types import ModuleType
+from pathlib import Path
 
 from .support import check_dependencies
 
@@ -6,9 +7,10 @@ from .support import check_dependencies
 class Proojekt:
     """Helps builds track files that change to know when to build, test, etc."""
 
-    def __init__(self):
+    def __init__(self, working_dir: Path):
         self.sources: list[str] = ["BUILD.py"]
         self.target: str | None = None
+        self.working_dir: Path = working_dir
         self._modules: dict[str, ModuleType] = {}
 
     def __setitem__(self, module_name: str, module: ModuleType):

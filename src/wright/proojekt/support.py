@@ -51,15 +51,15 @@ def load_file(path: Path, fn: str = None, module_name: str = "buildfile", skip_s
         if not fn:
             return module, None
 
-        try:
-            func = getattr(module, fn)
-            return module, func()
-        except AttributeError as err:
-            logging.warning(f"Unable to run {fn} in {path}: {err}")
-            sys.exit(1)
-        except Exception as err:
-            logging.warning(f"Failed to run {fn} in {path}: {err}")
-            sys.exit(1)
+        # try:
+        func = getattr(module, fn)
+        return module, func()
+        # except AttributeError as err:
+        #     logging.warning(f"Unable to run {fn} in {path}: {err}")
+        #     sys.exit(1)
+        # except Exception as err:
+        #     logging.warning(f"Failed to run {fn} in {path}: {err}")
+        #     sys.exit(1)
 
     logging.warning(f"Build file {path} does not appear to be a Python module")
     return None
@@ -188,3 +188,7 @@ def _get_version(line: str) -> tuple[str, int, int, int] | None:
             return None
 
     return None
+
+def current_path(file) -> Path:
+    """Return the path of the given file."""
+    return Path(file).parent

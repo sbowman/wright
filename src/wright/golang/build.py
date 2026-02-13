@@ -16,14 +16,14 @@ class App:
         if module:
             self.module = module
         else:
-            self.module = _get_module_name("go.mod")
+            self.module = _get_module_name(project.working_dir / "go.mod")
 
         if not self.module:
             raise GolangModuleNotFoundError()
 
         self.proojekt = project
         self.proojekt.watch("**/*.go")
-        self.proojekt.target = project.target or _get_target_name(self.module)
+        self.proojekt.target = project.target or project.working_dir / _get_target_name(self.module)
 
         self.vars: dict[str, str] = {}
         self.ldflags: list[str] = []
@@ -35,7 +35,10 @@ class App:
     def target(self, target: str | None = None) -> str | None:
         """Set or get the Go build target.  Defaults to the module basename."""
         if target:
-            self.proojekt.target = target
+            if Path(target).is_absolute():
+                self.proojekt.target = target
+            else:
+                self.proojekt.target = str(self.proojekt.working_dir / target)
 
         return self.proojekt.target
 
@@ -73,7 +76,7 @@ class App:
                 args.append(self.proojekt.target)
 
             try:
-                sh.go(*args, _out=True)
+                sh.go(*args, _out=True, _cwd=self.proojekt.working_dir)
             except Exception as err:
                 logging.error(f"Error compiling: {err}")
                 sys.exit(1)
@@ -92,10 +95,13 @@ class App:
 
     def run(self, *args):
         """Run the Go binary, i.e. the target."""
-        cmd = sh.Command(self.proojekt.target)
+        print("Working dir is: {}".format(self.proojekt.working_dir))
+        cmd = sh.Command(self.proojekt.target, search_paths=[self.proojekt.working_dir])
         try:
-            output = cmd(*args, _out=True)
-            print(output)
+            output = cmd(*args, _iter="out", _err_to_out=True, _cwd=self.proojekt.working_dir)
+            for line in output:
+                print(line.strip())
+
             sys.exit(output.exit_code)
         except Exception as err:
             logging.error(f"Error running binary: {err}")
@@ -113,10 +119,11 @@ class App:
         return self
 
 
-def _get_module_name(file_path: str) -> str | None:
+def _get_module_name(file_path: Path) -> str | None:
     """Get the module name out of a golang.mod file.  Returns None if the module is
     undefined."""
     try:
+        print("Looking in {}". format(file_path))
         with open(file_path, "r", encoding="utf-8") as file:
             for line in file:
                 line = line.strip()
