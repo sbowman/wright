@@ -95,7 +95,6 @@ class App:
 
     def run(self, *args):
         """Run the Go binary, i.e. the target."""
-        print("Working dir is: {}".format(self.proojekt.working_dir))
         cmd = sh.Command(self.proojekt.target, search_paths=[self.proojekt.working_dir])
         try:
             output = cmd(*args, _iter="out", _err_to_out=True, _cwd=self.proojekt.working_dir)
@@ -123,7 +122,6 @@ def _get_module_name(file_path: Path) -> str | None:
     """Get the module name out of a golang.mod file.  Returns None if the module is
     undefined."""
     try:
-        print("Looking in {}". format(file_path))
         with open(file_path, "r", encoding="utf-8") as file:
             for line in file:
                 line = line.strip()

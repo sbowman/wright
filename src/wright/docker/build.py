@@ -44,34 +44,39 @@ class Builder:
         project directory."""
         self._includes[name] = path
 
+    def changed(self) -> bool:
+        """Have any of the watched files changed?"""
+        return self.project.should_run()
+
     def build(self):
         """Builds the Docker image using the docker binary and buildx."""
-        args = [
-            "buildx",
-            "build",
-            "--platform", "linux/amd64",
-            "--tag", f"{self.container_name}:{self.version}",
-            "--file", self.dockerfile
-        ]
+        if self.changed():
+            args = [
+                "buildx",
+                "build",
+                "--platform", "linux/amd64",
+                "--tag", f"{self.container_name}:{self.version}",
+                "--file", self.dockerfile
+            ]
 
-        for arg, value in self._build_args.items():
-            args.append("--build-arg")
-            args.append(f"{arg}={value}")
+            for arg, value in self._build_args.items():
+                args.append("--build-arg")
+                args.append(f"{arg}={value}")
 
-        for name, path in self._includes.items():
-            args.append("--build-context")
-            args.append(f'{name}={path}')
+            for name, path in self._includes.items():
+                args.append("--build-context")
+                args.append(f'{name}={path}')
 
-        if not self.cache:
-            args.append("--no-cache")
+            if not self.cache:
+                args.append("--no-cache")
 
-        args.append(".")
+            args.append(".")
 
-        process = sh.docker(*args, _iter="out", _err_to_out=True, _cwd=self.project.working_dir)
-        for line in process:
-            print(f"[DOCKER]: {line.strip()}")
+            process = sh.docker(*args, _iter="out", _err_to_out=True, _cwd=self.project.working_dir)
+            for line in process:
+                print(f"[DOCKER]: {line.strip()}")
 
-    
+
 def build(project: Proojekt, container_name: str, version: str = "latest") -> Builder:
     """
     Build a Docker image from the given dockerfile.  Expects a container name
@@ -87,3 +92,19 @@ def build(project: Proojekt, container_name: str, version: str = "latest") -> Bu
 
     """
     return Builder(project, container_name, version)
+
+
+def exists(container_name: str, version: str = "latest"):
+    """
+    Does the image exist already?  Typically used to test if we need to rebuild
+    the image.
+    """
+    try:
+        output = sh.docker("inspect", f"{container_name}:{version}")
+        if output.strip() != "[]":
+            return True
+    except sh.ErrorReturnCode as e:
+        if e.stdout.decode().strip() == "[]":
+            return False
+
+
