@@ -1,5 +1,6 @@
 from types import ModuleType
 from pathlib import Path
+import os
 
 from .support import check_dependencies
 
@@ -12,6 +13,7 @@ class Proojekt:
         self.target: str | None = None
         self.working_dir: Path = working_dir
         self._modules: dict[str, ModuleType] = {}
+        self.force = os.getenv("FORCE", False)
 
     def __setitem__(self, module_name: str, module: ModuleType):
         """Set a module reference on the project."""

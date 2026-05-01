@@ -13,6 +13,7 @@ class Builder:
         self.dockerfile: str = "Dockerfile"
         self.cache: bool = True
         self.container_name: str = container_name
+        self._labels: dict[str, str] = {}
         self.version: str = version
         self._build_args: dict[str, Any] = {}
         self._includes: dict[str, str] = {}
@@ -39,18 +40,25 @@ class Builder:
         """Pass a build arg into the Dockerfile."""
         self._build_args[key] = value
 
+    def label(self, key: str, value: Any):
+        """Add a label to the container."""
+        self._labels[key] = value
+
     def include(self, name: str, path: str):
         """Add a build context to the Docker image, to include files outside the
         project directory."""
         self._includes[name] = path
 
-    def changed(self) -> bool:
-        """Have any of the watched files changed?"""
-        return self.project.should_run()
+    def should_build(self) -> bool:
+        """Does a Docker image exist for this container and version already?"""
+        if self.project.force:
+            return True
+
+        return not exists(self.container_name, self.version)
 
     def build(self):
         """Builds the Docker image using the docker binary and buildx."""
-        if self.changed():
+        if self.should_build():
             args = [
                 "buildx",
                 "build",
@@ -62,6 +70,10 @@ class Builder:
             for arg, value in self._build_args.items():
                 args.append("--build-arg")
                 args.append(f"{arg}={value}")
+
+            for key, value in self._labels.items():
+                args.append("--label")
+                args.append(f"{key}={value}")
 
             for name, path in self._includes.items():
                 args.append("--build-context")
@@ -94,7 +106,7 @@ def build(project: Proojekt, container_name: str, version: str = "latest") -> Bu
     return Builder(project, container_name, version)
 
 
-def exists(container_name: str, version: str = "latest"):
+def exists(container_name: str, version: str = "latest") -> bool:
     """
     Does the image exist already?  Typically used to test if we need to rebuild
     the image.
@@ -107,4 +119,4 @@ def exists(container_name: str, version: str = "latest"):
         if e.stdout.decode().strip() == "[]":
             return False
 
-
+    return False

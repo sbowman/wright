@@ -152,6 +152,7 @@ def _may_include_kwargs(func: Callable, kwargs: dict) -> dict:
         k: v for k, v in kwargs.items() if k in sig.parameters
     }
 
+
 def _get_ctx(args, kwargs) -> Proojekt | None:
     """Look for the context (ctx) in the args or the kwargs."""
     for arg in args:
@@ -163,4 +164,3 @@ def _get_ctx(args, kwargs) -> Proojekt | None:
             return value
 
     return None
-

@@ -14,8 +14,7 @@ class InvalidVersionError(Exception):
     pass
 
 
-def load_file(path: Path, fn: str = None, module_name: str = "buildfile", skip_sys_modules: bool = False) -> tuple[
-                                                                                                                 ModuleType, Any | None] | None:
+def load_file(path: Path, fn: str = None, module_name: str = "buildfile", skip_sys_modules: bool = False) -> tuple[                                                                                                             ModuleType, Any | None] | None:
     """
     Treats BUILD.py like a custom script for the wright tool.  Load the BUILD.py
     file and run the indicated function (build, test, run, package, etc.).  If
@@ -29,6 +28,7 @@ def load_file(path: Path, fn: str = None, module_name: str = "buildfile", skip_s
     :param fn: the name of the function to optionally run in the BUILD.py file
     :param module_name: how to refer to the loaded module (in sys.modules)
     :param skip_sys_modules: if true, don't include the build module in the sys.modules
+    :param args: the arguments from the command line, after the task
     :return: the results of calling the function in the BUILD.py file
     """
     sys.dont_write_bytecode = True

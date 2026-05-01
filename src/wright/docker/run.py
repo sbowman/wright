@@ -48,7 +48,10 @@ class Runner:
         self._network = name
 
     def run(self):
-        """Builds the Docker image using the docker binary and buildx."""
+        """Runs the Docker container."""
+        if running(container_name=self.container_name, version=self.version):
+            return
+
         args = [
             "run",
         ]
@@ -79,5 +82,37 @@ class Runner:
 
 
 def run(project: Proojekt, container_name: str, version: str = "latest", rm: bool = True, follow: bool = False):
-    """Run a Docker image using a with clause."""
+    """Run a Docker container, if the container and version aren't already running."""
     return Runner(project, container_name, version, rm=rm, follow=follow)
+
+
+def running(coupling: str = None, container_name: str = None, version: str = None):
+    """Returns true if the coupling or container is running."""
+    if coupling:
+        filter_str = f"label=com.wsp.conduit.coupling={coupling}"
+    elif container_name:
+        tag = f":{version}" if version else ""
+        filter_str = f"ancestor={container_name}{tag}"
+    else:
+        filter_str = None
+
+    container_ids = sh.docker.ps("-q", "--filter", filter_str).strip().split()
+
+    return len(container_ids) > 0
+
+
+def stop(coupling: str = None, container_name: str = None, version: str = None):
+    """Stop a Docker image by the coupling type or container tag."""
+    if coupling:
+        filter_str = f"label=com.wsp.conduit.coupling={coupling}"
+    elif container_name:
+        tag = f":{version}" if version else ""
+        filter_str = f"ancestor={container_name}{tag}"
+    else:
+        filter_str = None
+
+    if filter_str:
+        container_ids = sh.docker.ps("-q", "--filter", filter_str).strip().split()
+
+        if container_ids:
+            sh.docker.stop(*container_ids)

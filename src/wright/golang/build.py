@@ -6,6 +6,7 @@ import sh
 
 from wright.proojekt import Proojekt
 
+
 class GolangModuleNotFoundError(Exception):
     """Raised when the Go module is not found."""
     pass
@@ -54,7 +55,10 @@ class App:
 
     def changed(self) -> bool:
         """Have any of the watched files changed?"""
-        return self.proojekt.should_run()
+        return self.proojekt.force or self.proojekt.should_run()
+
+    def exists(self) -> bool:
+        return Path.exists(self.proojekt.target)
 
     def compile(self) -> App:
         """Compile a Go application using `golang build` if any of the watched
